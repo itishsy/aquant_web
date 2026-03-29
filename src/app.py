@@ -6,7 +6,7 @@ import threading
 import time
 from datetime import datetime
 
-from flask import Blueprint, Flask, jsonify, redirect, render_template, request, send_from_directory
+from flask import Blueprint, Flask, jsonify, redirect, render_template, request, send_from_directory, url_for
 from flask_cors import CORS
 from peewee import DoesNotExist
 
@@ -25,6 +25,7 @@ from src.db.models import (
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8080
+APP_PREFIX = "/aquant_web"
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TEMPLATE_DIR = os.path.join(BASE_DIR, "static")
@@ -158,14 +159,14 @@ def serialize_market_review(review: RevPan) -> dict:
 def require_login_redirect():
     username = request.cookies.get("username")
     if not username:
-        return redirect("/login")
+        return redirect(url_for("main.login"))
     return None
 
 
 @app_bp.route("/", methods=["GET"])
 def home():
     username = request.cookies.get("username")
-    return redirect("/index" if username else "/login")
+    return redirect(url_for("main.index") if username else url_for("main.login"))
 
 
 @app_bp.route("/login", methods=["GET", "POST"])
@@ -182,7 +183,7 @@ def login():
     result = AuthService.login(username, password)
     if result.get("success"):
         response = jsonify(result)
-        response.set_cookie("username", result["user"]["username"], max_age=86400, path="/")
+        response.set_cookie("username", result["user"]["username"], max_age=86400, path=APP_PREFIX)
         return response, 200
     return jsonify(result), 401
 
@@ -627,13 +628,17 @@ def create_app() -> Flask:
         except Exception as exc:
             app.logger.exception("Database initialization failed: %s", exc)
 
+    @app.route("/", methods=["GET"])
+    def root_redirect():
+        return redirect(APP_PREFIX + "/")
+
     @app.route("/shutdown", methods=["GET"])
     def shutdown():
         global server_shutdown_flag
         server_shutdown_flag = True
         return "Server shutting down..."
 
-    app.register_blueprint(app_bp)
+    app.register_blueprint(app_bp, url_prefix=APP_PREFIX)
     return app
 
 

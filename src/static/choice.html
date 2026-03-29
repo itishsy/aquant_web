@@ -46,7 +46,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo" onclick="window.location.href='/index'" style="cursor: pointer; text-align: center; width: 100%; position: absolute; left: 0; font-size: 24px; color: #1e3a8a; font-weight: bold;">自选</div>
+        <div class="logo" onclick="window.location.href='/aquant_web/index'" style="cursor: pointer; text-align: center; width: 100%; position: absolute; left: 0; font-size: 24px; color: #1e3a8a; font-weight: bold;">自选</div>
         <div class="user-info"><div class="user-avatar" id="userAvatar">U</div></div>
     </nav>
 
@@ -85,19 +85,19 @@
     </main>
 
     <div class="bottom-nav">
-        <div class="nav-item active" onclick="window.location.href='/choice'">
+        <div class="nav-item active" onclick="window.location.href='/aquant_web/choice'">
             <div class="nav-icon"><i class="fas fa-star"></i></div>
             <div class="nav-label">自选</div>
         </div>
-        <div class="nav-item" onclick="window.location.href='/market'">
+        <div class="nav-item" onclick="window.location.href='/aquant_web/market'">
             <div class="nav-icon"><i class="fas fa-chart-area"></i></div>
             <div class="nav-label">市场</div>
         </div>
-        <div class="nav-item" onclick="window.location.href='/review'">
+        <div class="nav-item" onclick="window.location.href='/aquant_web/review'">
             <div class="nav-icon"><i class="fas fa-book-open"></i></div>
             <div class="nav-label">复盘</div>
         </div>
-        <div class="nav-item" onclick="window.location.href='/setting'">
+        <div class="nav-item" onclick="window.location.href='/aquant_web/setting'">
             <div class="nav-icon"><i class="fas fa-cog"></i></div>
             <div class="nav-label">设置</div>
         </div>
@@ -173,7 +173,7 @@
         }
 
         function loadSignals() {
-            fetch('/api/signals')
+            fetch('/aquant_web/api/signals')
                 .then(response => response.json())
                 .then(data => renderList('signalsPanel', data, '暂无信号数据'))
                 .catch(error => {
@@ -182,7 +182,7 @@
         }
 
         function loadWatchlist() {
-            fetch('/api/watchlist')
+            fetch('/aquant_web/api/watchlist')
                 .then(response => response.json())
                 .then(data => renderList('watchlistPanel', data, '还没有自选，去信号列表里添加吧', { watchlistMode: true }))
                 .catch(error => {
@@ -196,7 +196,7 @@
         }
 
         function toggleFavorite(signalId) {
-            fetch(`/api/signals/${signalId}/favorite`, {
+            fetch(`/aquant_web/api/signals/${signalId}/favorite`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'
@@ -218,7 +218,7 @@
 
         function discardSignal(signalId) {
             if (!confirm('确认忽略这条信号吗？')) return;
-            fetch(`/api/signals/${signalId}/discard`, {
+            fetch(`/aquant_web/api/signals/${signalId}/discard`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'
