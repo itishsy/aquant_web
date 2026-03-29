@@ -70,13 +70,8 @@ def serialize_trade_daily_item(item: TradeDailyPlanItem) -> dict:
         "id": item.id,
         "symbol": item.symbol,
         "name": item.name,
-        "direction": item.direction,
-        "plan_type": item.plan_type,
-        "trigger_price": item.trigger_price,
-        "stop_price": item.stop_price,
-        "target_price": item.target_price,
-        "planned_position_pct": item.planned_position_pct,
-        "thesis": item.thesis,
+        "trade_type": item.plan_type,
+        "logic": item.thesis,
         "sort_order": item.sort_order,
     }
 
@@ -101,7 +96,10 @@ def serialize_trade_daily(plan: TradeDailyPlan, include_items: bool = True) -> d
             .where(TradeDailyPlanItem.plan == plan)
             .order_by(TradeDailyPlanItem.sort_order.asc(), TradeDailyPlanItem.id.asc())
         )
-        data["items"] = [serialize_trade_daily_item(item) for item in items]
+        action_list = [serialize_trade_daily_item(item) for item in items]
+        # actions: new frontend field; items: backward-compatible alias
+        data["actions"] = action_list
+        data["items"] = action_list
     return data
 
 
@@ -441,9 +439,9 @@ def _save_review_daily():
     plan = TradeDailyPlan.get_or_none(TradeDailyPlan.trade_date == trade_date)
     if plan:
         plan.position_pct = data.get("position_pct")
-        plan.cash_pct = data.get("cash_pct")
-        plan.holdings_summary = data.get("holdings_summary")
-        plan.market_view = data.get("market_view")
+        plan.cash_pct = None
+        plan.holdings_summary = None
+        plan.market_view = None
         plan.operation_summary = data.get("operation_summary")
         plan.tomorrow_plan = data.get("tomorrow_plan")
         plan.risk_watch = data.get("risk_watch")
@@ -454,9 +452,9 @@ def _save_review_daily():
         plan = TradeDailyPlan.create(
             trade_date=trade_date,
             position_pct=data.get("position_pct"),
-            cash_pct=data.get("cash_pct"),
-            holdings_summary=data.get("holdings_summary"),
-            market_view=data.get("market_view"),
+            cash_pct=None,
+            holdings_summary=None,
+            market_view=None,
             operation_summary=data.get("operation_summary"),
             tomorrow_plan=data.get("tomorrow_plan"),
             risk_watch=data.get("risk_watch"),
@@ -464,15 +462,16 @@ def _save_review_daily():
             updated=now,
         )
 
-    items = data.get("items") or []
-    for index, item in enumerate(items):
+    actions = data.get("actions")
+    if actions is None:
+        actions = data.get("items") or []
+    for index, item in enumerate(actions):
         if not any(
             [
                 _safe_str(item.get("symbol")).strip(),
                 _safe_str(item.get("name")).strip(),
-                _safe_str(item.get("thesis")).strip(),
-                _safe_str(item.get("trigger_price")).strip(),
-                _safe_str(item.get("plan_type")).strip(),
+                _safe_str(item.get("logic")).strip(),
+                _safe_str(item.get("trade_type")).strip(),
             ]
         ):
             continue
@@ -480,13 +479,13 @@ def _save_review_daily():
             plan=plan,
             symbol=item.get("symbol"),
             name=item.get("name"),
-            direction=item.get("direction"),
-            plan_type=item.get("plan_type"),
-            trigger_price=item.get("trigger_price"),
-            stop_price=item.get("stop_price"),
-            target_price=item.get("target_price"),
-            planned_position_pct=item.get("planned_position_pct"),
-            thesis=item.get("thesis"),
+            direction=None,
+            plan_type=item.get("trade_type"),
+            trigger_price=None,
+            stop_price=None,
+            target_price=None,
+            planned_position_pct=None,
+            thesis=item.get("logic"),
             sort_order=item.get("sort_order", index),
             created=now,
         )
