@@ -31,7 +31,6 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, "static")
 
 app_bp = Blueprint("main", __name__, template_folder=TEMPLATE_DIR, static_folder=TEMPLATE_DIR)
 server_shutdown_flag = False
-DB_READY = False
 
 
 def _now() -> datetime:
@@ -248,8 +247,6 @@ def style_css():
 
 @app_bp.route("/api/signals", methods=["GET"])
 def get_signals():
-    if not DB_READY:
-        return jsonify([]), 200
     try:
         signals = Signal.select().order_by(Signal.created.desc()).limit(60)
         return jsonify([serialize_signal(item) for item in signals])
@@ -259,8 +256,6 @@ def get_signals():
 
 @app_bp.route("/api/watchlist", methods=["GET"])
 def get_watchlist():
-    if not DB_READY:
-        return jsonify([]), 200
     try:
         limit = request.args.get("limit", default=50, type=int)
         rows = (
@@ -276,8 +271,6 @@ def get_watchlist():
 
 @app_bp.route("/api/signals/<int:signal_id>/favorite", methods=["POST"])
 def toggle_favorite(signal_id: int):
-    if not DB_READY:
-        return jsonify({"error": "database unavailable"}), 503
     try:
         signal = Signal.get_by_id(signal_id)
         signal.status = 0 if signal.status == 1 else 1
@@ -292,8 +285,6 @@ def toggle_favorite(signal_id: int):
 
 @app_bp.route("/api/signals/<int:signal_id>/discard", methods=["POST"])
 def discard_signal(signal_id: int):
-    if not DB_READY:
-        return jsonify({"error": "database unavailable"}), 503
     try:
         signal = Signal.get_by_id(signal_id)
         signal.status = 3
@@ -308,8 +299,6 @@ def discard_signal(signal_id: int):
 
 @app_bp.route("/api/reviews/check/<string:date>", methods=["GET"])
 def check_review(date: str):
-    if not DB_READY:
-        return jsonify({"result": 0}), 200
     try:
         count = RevPan.select().where(RevPan.date == date).count()
         return jsonify({"result": count}), 200
@@ -319,8 +308,6 @@ def check_review(date: str):
 
 @app_bp.route("/api/reviews/<int:review_id>/notify", methods=["POST"])
 def mark_review_notified(review_id: int):
-    if not DB_READY:
-        return jsonify({"error": "database unavailable"}), 503
     try:
         review = RevPan.get_by_id(review_id)
         review.notify = 1
@@ -334,8 +321,6 @@ def mark_review_notified(review_id: int):
 
 @app_bp.route("/api/reviews/<string:date>", methods=["GET"])
 def get_review(date: str):
-    if not DB_READY:
-        return jsonify({}), 200
     try:
         review = RevPan.get_or_none(RevPan.date == date)
         return jsonify(serialize_market_review(review) if review else {}), 200
@@ -345,8 +330,6 @@ def get_review(date: str):
 
 @app_bp.route("/api/hot_stocks/<string:date>", methods=["GET"])
 def get_hot_stocks(date: str):
-    if not DB_READY:
-        return jsonify([]), 200
     try:
         rows = (
             RevHot.select()
@@ -376,8 +359,6 @@ def get_hot_stocks(date: str):
 
 @app_bp.route("/api/hot_plates/<string:date>", methods=["GET"])
 def get_hot_plates(date: str):
-    if not DB_READY:
-        return jsonify([]), 200
     try:
         rows = (
             RevZtb.select()
@@ -409,8 +390,6 @@ def get_hot_plates(date: str):
 
 
 def _list_review_daily():
-    if not DB_READY:
-        return jsonify([])
     limit = request.args.get("limit", default=20, type=int)
     plans = (
         TradeDailyPlan.select()
@@ -421,15 +400,11 @@ def _list_review_daily():
 
 
 def _get_review_daily(trade_date: str):
-    if not DB_READY:
-        return jsonify({})
     plan = TradeDailyPlan.get_or_none(TradeDailyPlan.trade_date == trade_date)
     return jsonify(serialize_trade_daily(plan) if plan else {})
 
 
 def _save_review_daily():
-    if not DB_READY:
-        return jsonify({"error": "database unavailable"}), 503
     data = request.get_json(silent=True) or {}
     trade_date = _safe_str(data.get("trade_date")).strip()
     if not trade_date:
@@ -495,8 +470,6 @@ def _save_review_daily():
 
 
 def _list_review_weekly():
-    if not DB_READY:
-        return jsonify([])
     limit = request.args.get("limit", default=12, type=int)
     reviews = (
         TradeWeeklyReview.select()
@@ -507,15 +480,11 @@ def _list_review_weekly():
 
 
 def _get_review_weekly(week_key: str):
-    if not DB_READY:
-        return jsonify({})
     review = TradeWeeklyReview.get_or_none(TradeWeeklyReview.week_key == week_key)
     return jsonify(serialize_trade_weekly(review) if review else {})
 
 
 def _save_review_weekly():
-    if not DB_READY:
-        return jsonify({"error": "database unavailable"}), 503
     data = request.get_json(silent=True) or {}
     week_key = _safe_str(data.get("week_key")).strip()
     week_start = _safe_str(data.get("week_start")).strip()
@@ -544,8 +513,6 @@ def _save_review_weekly():
 
 
 def _list_review_monthly():
-    if not DB_READY:
-        return jsonify([])
     limit = request.args.get("limit", default=12, type=int)
     rows = (
         TradeMonthlySummary.select()
@@ -556,15 +523,11 @@ def _list_review_monthly():
 
 
 def _get_review_monthly(month_key: str):
-    if not DB_READY:
-        return jsonify({})
     summary = TradeMonthlySummary.get_or_none(TradeMonthlySummary.month_key == month_key)
     return jsonify(serialize_trade_monthly(summary) if summary else {})
 
 
 def _save_review_monthly():
-    if not DB_READY:
-        return jsonify({"error": "database unavailable"}), 503
     data = request.get_json(silent=True) or {}
     month_key = _safe_str(data.get("month_key")).strip()
     if not month_key:
@@ -655,16 +618,13 @@ def run_with_shutdown_support(app: Flask, host: str = DEFAULT_HOST, port: int = 
 
 
 def create_app() -> Flask:
-    global DB_READY
     app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=TEMPLATE_DIR)
     CORS(app, resources={r"/api/*": {"origins": "*", "supports_credentials": True}})
 
     with app.app_context():
         try:
             init_db()
-            DB_READY = True
         except Exception as exc:
-            DB_READY = False
             app.logger.exception("Database initialization failed: %s", exc)
 
     @app.route("/shutdown", methods=["GET"])

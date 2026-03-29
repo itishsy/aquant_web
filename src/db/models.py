@@ -6,6 +6,10 @@ import sys
 # 添加项目根目录到sys.path
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, project_root)
+from dotenv import load_dotenv
+
+# 显式加载项目根目录 .env，确保数据库配置从 .env 读取
+load_dotenv(os.path.join(project_root, '.env'))
 
 from peewee import (
     Model,
@@ -26,7 +30,7 @@ db_config = {
     'user': os.getenv('MYSQL_USER', 'root'),
     'password': os.getenv('MYSQL_PASSWORD', 'root'),
     'database': os.getenv('MYSQL_DATABASE', 'test'),
-    'connect_timeout': int(os.getenv('MYSQL_CONNECT_TIMEOUT', 1)),
+    'connect_timeout': int(os.getenv('MYSQL_CONNECT_TIMEOUT', 5)),
 }
 
 # 创建数据库实例
