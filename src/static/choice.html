@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>自选</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('main.style_css') }}">
+    <style>
+        .watch-shell { display: flex; flex-direction: column; gap: 14px; }
+        .hero-card { padding: 18px 16px; border-radius: 24px; color: #fff; background: radial-gradient(circle at top right, rgba(255,255,255,.18), transparent 28%), linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%); box-shadow: 0 16px 36px rgba(15,23,42,.2); }
+        .hero-card h1 { font-size: 22px; margin-bottom: 8px; }
+        .hero-card p { font-size: 13px; line-height: 1.7; color: rgba(255,255,255,.88); }
+        .tab-bar { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .tab-btn { border: none; border-radius: 16px; padding: 12px 8px; background: #eef3f9; color: #4b5b72; font-size: 13px; font-weight: 700; }
+        .tab-btn.active { background: linear-gradient(135deg, #0f62fe 0%, #1d4ed8 100%); color: #fff; box-shadow: 0 10px 24px rgba(15,98,254,.2); }
+        .panel-card { background: #fff; border-radius: 22px; padding: 16px; box-shadow: 0 12px 30px rgba(15,23,42,.08); }
+        .panel-card.hidden { display: none; }
+        .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+        .panel-title { font-size: 17px; font-weight: 800; color: #162033; display: flex; align-items: center; gap: 10px; }
+        .panel-title i { width: 32px; height: 32px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: #edf4ff; color: #0f62fe; font-size: 14px; }
+        .panel-badge { padding: 6px 10px; border-radius: 999px; background: #f3f6fb; color: #5b6b82; font-size: 12px; font-weight: 700; }
+        .signal-list { display: flex; flex-direction: column; gap: 10px; }
+        .signal-card { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 14px; border-radius: 18px; background: #fbfcfe; border: 1px solid #edf1f6; }
+        .signal-main { min-width: 0; }
+        .signal-name { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 16px; font-weight: 800; color: #162033; }
+        .signal-name a { color: inherit; text-decoration: none; }
+        .signal-meta { font-size: 13px; color: #5b687f; line-height: 1.7; word-break: break-word; }
+        .signal-actions { display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+        .action-btn { min-width: 96px; min-height: 38px; border: none; border-radius: 12px; padding: 8px 12px; font-size: 13px; font-weight: 700; cursor: pointer; }
+        .favorite-btn { background: #eef5ff; color: #1656b8; }
+        .favorite-btn.active { background: #fff2c7; color: #8a5a00; }
+        .remove-btn { background: #fff1f2; color: #e11d48; }
+        .discard-btn { background: #f3f4f6; color: #475569; }
+        .loading-indicator, .empty-state { min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #64748b; font-size: 14px; }
+        .spinner { width: 36px; height: 36px; margin-bottom: 12px; border-radius: 50%; border: 4px solid rgba(15,98,254,.12); border-left-color: #0f62fe; animation: spin 1s linear infinite; }
+        .notification { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); padding: 12px 16px; border-radius: 14px; color: #fff; font-size: 13px; z-index: 1200; background: rgba(15,23,42,.92); }
+        .notification.error { background: rgba(185, 28, 28, .92); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 480px) {
+            .signal-card { grid-template-columns: 1fr; }
+            .signal-actions { flex-direction: row; }
+            .action-btn { flex: 1; min-width: 0; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo" onclick="window.location.href='/index'" style="cursor: pointer; text-align: center; width: 100%; position: absolute; left: 0; font-size: 24px; color: #1e3a8a; font-weight: bold;">自选</div>
+        <div class="user-info"><div class="user-avatar" id="userAvatar">U</div></div>
+    </nav>
+
+    <main class="main-content">
+        <div class="watch-shell">
+            <section class="hero-card">
+                <h1>自选与信号</h1>
+                <p>切换 Tab 查看“自选”和“信号”。加入自选后会出现在独立列表里，方便你集中跟踪。</p>
+            </section>
+
+            <section class="tab-bar">
+                <button class="tab-btn active" data-tab="watchlistPanelCard">自选</button>
+                <button class="tab-btn" data-tab="signalsPanelCard">信号</button>
+            </section>
+
+            <section class="panel-card" id="watchlistPanelCard">
+                <div class="panel-head">
+                    <div class="panel-title"><i class="fas fa-star"></i><span>自选</span></div>
+                    <div class="panel-badge">我的关注</div>
+                </div>
+                <div class="signal-list" id="watchlistPanel">
+                    <div class="loading-indicator"><div class="spinner"></div><p>正在加载自选...</p></div>
+                </div>
+            </section>
+
+            <section class="panel-card hidden" id="signalsPanelCard">
+                <div class="panel-head">
+                    <div class="panel-title"><i class="fas fa-bolt"></i><span>信号</span></div>
+                    <div class="panel-badge">现有信号</div>
+                </div>
+                <div class="signal-list" id="signalsPanel">
+                    <div class="loading-indicator"><div class="spinner"></div><p>正在加载信号...</p></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="window.location.href='/choice'"><div class="nav-icon"><i class="fas fa-star"></i></div><div class="nav-label">自选</div></div>
+        <div class="nav-item" onclick="window.location.href='/review'"><div class="nav-icon"><i class="fas fa-chart-area"></i></div><div class="nav-label">市场</div></div>
+        <div class="nav-item" onclick="window.location.href='/trade'"><div class="nav-icon"><i class="fas fa-book-open"></i></div><div class="nav-label">复盘</div></div>
+        <div class="nav-item" onclick="window.location.href='/setting'"><div class="nav-icon"><i class="fas fa-cog"></i></div><div class="nav-label">设置</div></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            bindTabs();
+            loadWatchlist();
+            loadSignals();
+        });
+
+        function bindTabs() {
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-btn').forEach(item => item.classList.remove('active'));
+                    document.querySelectorAll('.panel-card').forEach(panel => panel.classList.add('hidden'));
+                    button.classList.add('active');
+                    document.getElementById(button.dataset.tab).classList.remove('hidden');
+                });
+            });
+        }
+
+        function escapeHtml(text) {
+            return String(text ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function getExchangePrefix(code) {
+            if (!code) return 'SZ';
+            if (code.startsWith('60') || code.startsWith('68')) return 'SH';
+            return 'SZ';
+        }
+
+        function getStockLink(code, name) {
+            if (!code) return `<span>${escapeHtml(name || '未知名称')}</span>`;
+            const prefix = getExchangePrefix(code);
+            return `<a href="https://xueqiu.com/S/${prefix}${code}" target="_blank">${escapeHtml(name || code)}</a>`;
+        }
+
+        function signalMeta(signal) {
+            const parts = [
+                signal.freq ? `级别: ${signal.freq}` : '',
+                signal.dt ? `时间: ${signal.dt}` : '',
+                signal.strategy ? `策略: ${signal.strategy}` : '',
+                signal.price ? `价格: ${signal.price}` : ''
+            ].filter(Boolean);
+            return parts.join(' | ');
+        }
+
+        function renderCard(signal, options = {}) {
+            const watchButton = options.watchlistMode
+                ? `<button class="action-btn remove-btn" onclick="removeFavorite(${signal.id})">移除自选</button>`
+                : `<button class="action-btn ${signal.status === 1 ? 'favorite-btn active' : 'favorite-btn'}" onclick="toggleFavorite(${signal.id})">${signal.status === 1 ? '已在自选' : '加入自选'}</button>`;
+            const discardButton = options.watchlistMode ? '' : `<button class="action-btn discard-btn" onclick="discardSignal(${signal.id})">忽略信号</button>`;
+            return `<article class="signal-card"><div class="signal-main"><div class="signal-name"><i class="fas ${signal.status === 1 ? 'fa-star' : 'fa-bolt'}" style="color:${signal.status === 1 ? '#eab308' : '#2563eb'}"></i>${getStockLink(signal.code, signal.name)}</div><div class="signal-meta">${escapeHtml(signalMeta(signal) || '暂无更多信号信息')}</div></div><div class="signal-actions">${watchButton}${discardButton}</div></article>`;
+        }
+
+        function renderList(containerId, items, emptyText, options = {}) {
+            const container = document.getElementById(containerId);
+            if (!Array.isArray(items) || !items.length) {
+                container.innerHTML = `<div class="empty-state">${emptyText}</div>`;
+                return;
+            }
+            container.innerHTML = items.map(item => renderCard(item, options)).join('');
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 2200);
+        }
+
+        function loadSignals() {
+            fetch('/api/signals')
+                .then(response => response.json())
+                .then(data => renderList('signalsPanel', data, '暂无信号数据'))
+                .catch(error => {
+                    document.getElementById('signalsPanel').innerHTML = `<div class="empty-state">信号加载失败: ${escapeHtml(error.message)}</div>`;
+                });
+        }
+
+        function loadWatchlist() {
+            fetch('/api/watchlist')
+                .then(response => response.json())
+                .then(data => renderList('watchlistPanel', data, '还没有自选，去信号列表里添加吧', { watchlistMode: true }))
+                .catch(error => {
+                    document.getElementById('watchlistPanel').innerHTML = `<div class="empty-state">自选加载失败: ${escapeHtml(error.message)}</div>`;
+                });
+        }
+
+        function refreshPanels() {
+            loadSignals();
+            loadWatchlist();
+        }
+
+        function toggleFavorite(signalId) {
+            fetch(`/api/signals/${signalId}/favorite`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('更新自选失败');
+                    return response.json();
+                })
+                .then(() => {
+                    showNotification('已更新自选');
+                    refreshPanels();
+                })
+                .catch(error => showNotification(error.message, 'error'));
+        }
+
+        function removeFavorite(signalId) {
+            toggleFavorite(signalId);
+        }
+
+        function discardSignal(signalId) {
+            if (!confirm('确认忽略这条信号吗？')) return;
+            fetch(`/api/signals/${signalId}/discard`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('忽略信号失败');
+                    return response.json();
+                })
+                .then(() => {
+                    showNotification('该信号已忽略');
+                    refreshPanels();
+                })
+                .catch(error => showNotification(error.message, 'error'));
+        }
+    </script>
+</body>
+</html>

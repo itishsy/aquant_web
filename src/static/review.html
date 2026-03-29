@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>复盘</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('main.style_css') }}">
+    <style>
+        .trade-shell { display: flex; flex-direction: column; gap: 14px; }
+        .trade-hero { padding: 18px 16px; border-radius: 24px; color: #fff; background: radial-gradient(circle at top right, rgba(255,255,255,.18), transparent 28%), linear-gradient(135deg, #0f172a 0%, #134e4a 100%); box-shadow: 0 16px 36px rgba(15,23,42,.2); }
+        .trade-hero h1 { font-size: 22px; margin-bottom: 8px; }
+        .trade-hero p { font-size: 13px; line-height: 1.7; color: rgba(255,255,255,.85); }
+        .module-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .module-tab { border: none; border-radius: 16px; padding: 12px 8px; background: #eef3f9; color: #4b5b72; font-size: 13px; font-weight: 700; }
+        .module-tab.active { background: linear-gradient(135deg, #0f62fe 0%, #1d4ed8 100%); color: #fff; box-shadow: 0 10px 24px rgba(15,98,254,.2); }
+        .module-panel { display: none; background: #fff; border-radius: 22px; padding: 16px; box-shadow: 0 12px 30px rgba(15,23,42,.08); }
+        .module-panel.active { display: block; }
+        .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .panel-head h2 { font-size: 18px; color: #162033; }
+        .panel-desc { font-size: 12px; color: #6b7a90; margin-top: 4px; line-height: 1.6; }
+        .panel-badge { padding: 6px 10px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 12px; font-weight: 700; white-space: nowrap; }
+        .history-tip { margin-top: 8px; font-size: 12px; color: #6b7a90; line-height: 1.6; }
+        .form-grid { display: grid; gap: 14px; }
+        .form-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .field label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: #21314b; }
+        .field input, .field textarea, .field select { width: 100%; border: 1px solid #dbe4ef; border-radius: 14px; background: #f8fafc; padding: 12px 14px; font-size: 14px; color: #1f2937; }
+        .field textarea { min-height: 108px; resize: vertical; line-height: 1.6; }
+        .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: #0f62fe; box-shadow: 0 0 0 3px rgba(15,98,254,.1); background: #fff; }
+        .section-title { margin: 18px 0 10px; font-size: 14px; font-weight: 800; color: #162033; }
+        .daily-item-list { display: flex; flex-direction: column; gap: 10px; }
+        .daily-item { padding: 12px; border: 1px solid #e8eef5; border-radius: 18px; background: #fbfdff; }
+        .daily-item-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .daily-item .field textarea { min-height: 84px; }
+        .item-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+        .ghost-btn, .danger-btn, .primary-btn { border: none; border-radius: 14px; padding: 12px 16px; font-size: 14px; font-weight: 700; }
+        .ghost-btn { background: #eef3f9; color: #415168; }
+        .danger-btn { background: #fff1f2; color: #e11d48; }
+        .primary-btn { background: linear-gradient(135deg, #0f62fe 0%, #1d4ed8 100%); color: #fff; box-shadow: 0 10px 22px rgba(15,98,254,.18); }
+        .panel-actions { display: flex; gap: 10px; margin-top: 16px; }
+        .recent-card { background: #fff; border-radius: 22px; padding: 16px; box-shadow: 0 12px 30px rgba(15,23,42,.08); }
+        .recent-card h3 { font-size: 16px; color: #162033; margin-bottom: 12px; }
+        .recent-list { display: flex; flex-direction: column; gap: 10px; }
+        .recent-item { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 16px; background: #f8fafc; border: 1px solid #edf2f7; }
+        .recent-item-main { min-width: 0; }
+        .recent-item-title { font-size: 14px; font-weight: 800; color: #172435; margin-bottom: 4px; }
+        .recent-item-sub { font-size: 12px; color: #6b7a90; line-height: 1.6; }
+        .recent-link { border: none; background: none; color: #0f62fe; font-size: 12px; font-weight: 700; white-space: nowrap; }
+        .toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); min-width: 180px; max-width: calc(100vw - 32px); padding: 12px 16px; border-radius: 14px; background: rgba(15,23,42,.92); color: #fff; text-align: center; font-size: 13px; z-index: 1200; }
+        .empty-text { color: #6b7a90; font-size: 13px; text-align: center; padding: 18px 0 6px; }
+        @media (max-width: 480px) { .form-grid.two, .daily-item-grid { grid-template-columns: 1fr; } .panel-actions { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo" onclick="window.location.href='/index'" style="cursor: pointer; text-align: center; width: 100%; position: absolute; left: 0; font-size: 24px; color: #1e3a8a; font-weight: bold;">复盘</div>
+        <div class="user-info"><div class="user-avatar" id="userAvatar">U</div></div>
+    </nav>
+    <main class="main-content">
+        <div class="trade-shell">
+            <section class="module-tabs">
+                <button class="module-tab active" data-tab="dailyPanel">每日计划</button>
+                <button class="module-tab" data-tab="weeklyPanel">周复盘</button>
+                <button class="module-tab" data-tab="monthlyPanel">月总结</button>
+            </section>
+            <section class="module-panel active" id="dailyPanel">
+                <div class="panel-head"><div><h2>每日计划</h2><div class="panel-desc">记录当日仓位、操作小结、明日计划，以及重点个股的执行方案。</div><div class="history-tip">切换“交易日期”即可查看和编辑历史的每日计划。</div></div><div class="panel-badge">按日回看</div></div>
+                <div class="form-grid two">
+                    <div class="field"><label for="dailyDate">交易日期</label><input type="date" id="dailyDate"></div>
+                    <div class="field"><label for="positionPct">当日仓位</label><input type="text" id="positionPct" placeholder="例如 65%"></div>
+                    <div class="field"><label for="cashPct">现金比例</label><input type="text" id="cashPct" placeholder="例如 35%"></div>
+                    <div class="field"><label for="holdingsSummary">持仓情况</label><input type="text" id="holdingsSummary" placeholder="例如 2只核心票 + 1只观察仓"></div>
+                </div>
+                <div class="form-grid">
+                    <div class="field"><label for="marketView">盘前/盘中观点</label><textarea id="marketView" placeholder="今天主要看什么方向，情绪处在什么位置，适不适合主动出手"></textarea></div>
+                    <div class="field"><label for="operationSummary">操作小结</label><textarea id="operationSummary" placeholder="记录今天买卖了什么，执行有没有走样，错在哪里"></textarea></div>
+                    <div class="field"><label for="tomorrowPlan">明日计划</label><textarea id="tomorrowPlan" placeholder="明天重点盯什么，什么条件下出手，不满足什么条件就放弃"></textarea></div>
+                    <div class="field"><label for="riskWatch">风险提醒</label><textarea id="riskWatch" placeholder="例如 仓位不能追满，弱转强失败立即撤退"></textarea></div>
+                </div>
+                <div class="section-title">重点个股计划</div>
+                <div class="daily-item-list" id="dailyItems"></div>
+                <div class="panel-actions"><button class="ghost-btn" type="button" id="addDailyItemBtn">新增个股计划</button><button class="primary-btn" type="button" id="saveDailyBtn">保存每日计划</button></div>
+            </section>
+            <section class="module-panel" id="weeklyPanel">
+                <div class="panel-head"><div><h2>周复盘</h2><div class="panel-desc">复盘本周所有操作，拆出问题，下沉到下周的执行计划与改进项。</div><div class="history-tip">切换“周开始 / 周结束”即可回看历史周复盘。</div></div><div class="panel-badge">按周回看</div></div>
+                <div class="form-grid two">
+                    <div class="field"><label for="weekStart">周开始</label><input type="date" id="weekStart"></div>
+                    <div class="field"><label for="weekEnd">周结束</label><input type="date" id="weekEnd"></div>
+                </div>
+                <div class="form-grid">
+                    <div class="field"><label for="weeklyOperations">本周所有操作</label><textarea id="weeklyOperations" placeholder="按时间或按票梳理：做了什么、为什么做、结果如何"></textarea></div>
+                    <div class="field"><label for="weeklyIssues">本周交易问题</label><textarea id="weeklyIssues" placeholder="例如 追高、加仓随意、止损不坚决、情绪票切换慢"></textarea></div>
+                    <div class="field"><label for="weeklyNextPlan">下周操作计划</label><textarea id="weeklyNextPlan" placeholder="下周主做什么，节奏怎么控，什么情况下休息"></textarea></div>
+                    <div class="field"><label for="weeklyImprovements">需要改进的点</label><textarea id="weeklyImprovements" placeholder="写清下周最需要纠偏的 2-3 个动作"></textarea></div>
+                </div>
+                <div class="panel-actions"><button class="primary-btn" type="button" id="saveWeeklyBtn">保存周复盘</button></div>
+            </section>
+            <section class="module-panel" id="monthlyPanel">
+                <div class="panel-head"><div><h2>月总结</h2><div class="panel-desc">沉淀赚钱模式、亏钱模式和经验总结，让月度复盘真正指导下个月。</div><div class="history-tip">切换“月份”即可查看历史月总结。</div></div><div class="panel-badge">按月回看</div></div>
+                <div class="form-grid">
+                    <div class="field"><label for="monthKey">月份</label><input type="month" id="monthKey"></div>
+                    <div class="field"><label for="monthlyPerformance">本月表现回顾</label><textarea id="monthlyPerformance" placeholder="本月整体节奏、收益、回撤，做对了什么"></textarea></div>
+                    <div class="field"><label for="winningPatterns">赚钱模式</label><textarea id="winningPatterns" placeholder="哪些模式最适合你，什么行情里最容易赚到钱"></textarea></div>
+                    <div class="field"><label for="losingPatterns">亏钱模式</label><textarea id="losingPatterns" placeholder="哪些动作最伤，哪些票型以后要少做"></textarea></div>
+                    <div class="field"><label for="experienceSummary">经验总结</label><textarea id="experienceSummary" placeholder="本月真正值得留下来的经验和原则"></textarea></div>
+                    <div class="field"><label for="nextMonthGoal">下月目标</label><textarea id="nextMonthGoal" placeholder="下个月重点训练什么、约束什么、主攻什么"></textarea></div>
+                </div>
+                <div class="panel-actions"><button class="primary-btn" type="button" id="saveMonthlyBtn">保存月总结</button></div>
+            </section>
+            <section class="recent-card"><h3>历史记录</h3><div class="recent-list" id="recentRecords"></div></section>
+        </div>
+    </main>
+    <div class="bottom-nav">
+        <div class="nav-item" onclick="window.location.href='/choice'">
+            <div class="nav-icon"><i class="fas fa-bolt"></i></div>
+            <div class="nav-label">自选</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/market'">
+            <div class="nav-icon"><i class="fas fa-chart-area"></i></div>
+            <div class="nav-label">市场</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/review'">
+            <div class="nav-icon"><i class="fas fa-book-open"></i></div>
+            <div class="nav-label">复盘</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/setting'">
+            <div class="nav-icon"><i class="fas fa-cog"></i></div>
+            <div class="nav-label">设置</div>
+        </div>
+    </div>
+    <script>
+        const dailyItemsEl = document.getElementById('dailyItems');
+        const recentRecordsEl = document.getElementById('recentRecords');
+        document.addEventListener('DOMContentLoaded', function() { initTabs(); initDefaults(); bindActions(); addDailyItem(); loadDailyRecord(); loadWeeklyRecord(); loadMonthlyRecord(); loadRecentRecords(); });
+        function initTabs() { document.querySelectorAll('.module-tab').forEach(button => { button.addEventListener('click', () => { document.querySelectorAll('.module-tab').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.module-panel').forEach(panel => panel.classList.remove('active')); button.classList.add('active'); document.getElementById(button.dataset.tab).classList.add('active'); }); }); }
+        function initDefaults() { const today = new Date(); document.getElementById('dailyDate').value = formatDate(today); document.getElementById('monthKey').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2,'0')}`; const week = getWeekRange(today); document.getElementById('weekStart').value = week.start; document.getElementById('weekEnd').value = week.end; }
+        function bindActions() { document.getElementById('addDailyItemBtn').addEventListener('click', () => addDailyItem()); document.getElementById('saveDailyBtn').addEventListener('click', saveDailyRecord); document.getElementById('saveWeeklyBtn').addEventListener('click', saveWeeklyRecord); document.getElementById('saveMonthlyBtn').addEventListener('click', saveMonthlyRecord); document.getElementById('dailyDate').addEventListener('change', loadDailyRecord); document.getElementById('weekStart').addEventListener('change', loadWeeklyRecord); document.getElementById('weekEnd').addEventListener('change', loadWeeklyRecord); document.getElementById('monthKey').addEventListener('change', loadMonthlyRecord); }
+        function formatDate(date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
+        function getWeekRange(date) { const current = new Date(date); const day = current.getDay() || 7; current.setDate(current.getDate() - day + 1); const start = new Date(current); const end = new Date(current); end.setDate(start.getDate() + 4); return { start: formatDate(start), end: formatDate(end) }; }
+        function getWeekKey() { const start = document.getElementById('weekStart').value; const end = document.getElementById('weekEnd').value; return start && end ? `${start}_${end}` : ''; }
+        function showToast(message) { const toast = document.createElement('div'); toast.className = 'toast'; toast.textContent = message; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2200); }
+        function createDailyItemRow(item = {}) { const wrapper = document.createElement('div'); wrapper.className = 'daily-item'; wrapper.innerHTML = `<div class="daily-item-grid"><div class="field"><label>股票代码</label><input type="text" class="item-symbol" value="${item.symbol || ''}" placeholder="例如 002192"></div><div class="field"><label>股票名称</label><input type="text" class="item-name" value="${item.name || ''}" placeholder="例如 融捷股份"></div><div class="field"><label>计划方向</label><select class="item-direction"><option value="观察">观察</option><option value="低吸">低吸</option><option value="半路">半路</option><option value="打板">打板</option><option value="卖出">卖出</option></select></div><div class="field"><label>计划类型</label><input type="text" class="item-plan-type" value="${item.plan_type || ''}" placeholder="例如 弱转强 / 分歧低吸"></div><div class="field"><label>触发价</label><input type="text" class="item-trigger-price" value="${item.trigger_price || ''}" placeholder="例如 18.20"></div><div class="field"><label>止损价</label><input type="text" class="item-stop-price" value="${item.stop_price || ''}" placeholder="例如 17.55"></div><div class="field"><label>目标价</label><input type="text" class="item-target-price" value="${item.target_price || ''}" placeholder="例如 19.80"></div><div class="field"><label>计划仓位</label><input type="text" class="item-position" value="${item.planned_position_pct || ''}" placeholder="例如 15%"></div></div><div class="field" style="margin-top:10px;"><label>交易逻辑</label><textarea class="item-thesis" placeholder="为什么关注，什么条件下买，什么情况下放弃">${item.thesis || ''}</textarea></div><div class="item-actions"><button class="danger-btn" type="button">删除</button></div>`; wrapper.querySelector('.item-direction').value = item.direction || '观察'; wrapper.querySelector('.danger-btn').addEventListener('click', () => { wrapper.remove(); if (!dailyItemsEl.children.length) addDailyItem(); }); return wrapper; }
+        function addDailyItem(item = {}) { dailyItemsEl.appendChild(createDailyItemRow(item)); }
+        function collectDailyItems() { return Array.from(document.querySelectorAll('.daily-item')).map((row, index) => ({ symbol: row.querySelector('.item-symbol').value.trim(), name: row.querySelector('.item-name').value.trim(), direction: row.querySelector('.item-direction').value.trim(), plan_type: row.querySelector('.item-plan-type').value.trim(), trigger_price: row.querySelector('.item-trigger-price').value.trim(), stop_price: row.querySelector('.item-stop-price').value.trim(), target_price: row.querySelector('.item-target-price').value.trim(), planned_position_pct: row.querySelector('.item-position').value.trim(), thesis: row.querySelector('.item-thesis').value.trim(), sort_order: index })); }
+        async function loadDailyRecord() { const tradeDate = document.getElementById('dailyDate').value; if (!tradeDate) return; const response = await fetch(`/api/trade/daily/${tradeDate}`); const data = await response.json(); document.getElementById('positionPct').value = data.position_pct || ''; document.getElementById('cashPct').value = data.cash_pct || ''; document.getElementById('holdingsSummary').value = data.holdings_summary || ''; document.getElementById('marketView').value = data.market_view || ''; document.getElementById('operationSummary').value = data.operation_summary || ''; document.getElementById('tomorrowPlan').value = data.tomorrow_plan || ''; document.getElementById('riskWatch').value = data.risk_watch || ''; dailyItemsEl.innerHTML = ''; const items = data.items || []; if (items.length) { items.forEach(item => addDailyItem(item)); } else { addDailyItem(); } }
+        async function saveDailyRecord() { const payload = { trade_date: document.getElementById('dailyDate').value, position_pct: document.getElementById('positionPct').value.trim(), cash_pct: document.getElementById('cashPct').value.trim(), holdings_summary: document.getElementById('holdingsSummary').value.trim(), market_view: document.getElementById('marketView').value.trim(), operation_summary: document.getElementById('operationSummary').value.trim(), tomorrow_plan: document.getElementById('tomorrowPlan').value.trim(), risk_watch: document.getElementById('riskWatch').value.trim(), items: collectDailyItems() }; const response = await fetch('/api/trade/daily', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!response.ok) { showToast('每日计划保存失败'); return; } showToast('每日计划已保存'); loadRecentRecords(); }
+        async function loadWeeklyRecord() { const weekKey = getWeekKey(); if (!weekKey) return; const response = await fetch(`/api/trade/weekly/${weekKey}`); const data = await response.json(); document.getElementById('weeklyOperations').value = data.operation_review || ''; document.getElementById('weeklyIssues').value = data.trade_issues || ''; document.getElementById('weeklyNextPlan').value = data.next_week_plan || ''; document.getElementById('weeklyImprovements').value = data.improvements || ''; }
+        async function saveWeeklyRecord() { const payload = { week_key: getWeekKey(), week_start: document.getElementById('weekStart').value, week_end: document.getElementById('weekEnd').value, operation_review: document.getElementById('weeklyOperations').value.trim(), trade_issues: document.getElementById('weeklyIssues').value.trim(), next_week_plan: document.getElementById('weeklyNextPlan').value.trim(), improvements: document.getElementById('weeklyImprovements').value.trim() }; const response = await fetch('/api/trade/weekly', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!response.ok) { showToast('周复盘保存失败'); return; } showToast('周复盘已保存'); loadRecentRecords(); }
+        async function loadMonthlyRecord() { const monthKey = document.getElementById('monthKey').value; if (!monthKey) return; const response = await fetch(`/api/trade/monthly/${monthKey}`); const data = await response.json(); document.getElementById('monthlyPerformance').value = data.performance_review || ''; document.getElementById('winningPatterns').value = data.winning_patterns || ''; document.getElementById('losingPatterns').value = data.losing_patterns || ''; document.getElementById('experienceSummary').value = data.experience_summary || ''; document.getElementById('nextMonthGoal').value = data.next_month_goal || ''; }
+        async function saveMonthlyRecord() { const payload = { month_key: document.getElementById('monthKey').value, performance_review: document.getElementById('monthlyPerformance').value.trim(), winning_patterns: document.getElementById('winningPatterns').value.trim(), losing_patterns: document.getElementById('losingPatterns').value.trim(), experience_summary: document.getElementById('experienceSummary').value.trim(), next_month_goal: document.getElementById('nextMonthGoal').value.trim() }; const response = await fetch('/api/trade/monthly', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!response.ok) { showToast('月总结保存失败'); return; } showToast('月总结已保存'); loadRecentRecords(); }
+        function renderRecentSection(title, items, type) { if (!items.length) { return `<div class="recent-item"><div class="recent-item-main"><div class="recent-item-title">${title}</div><div class="empty-text">暂无记录</div></div></div>`; } const top = items.slice(0,3).map(item => { const meta = type === 'daily' ? `${item.position_pct || '-'} 仓位 | ${item.cash_pct || '-'} 现金` : type === 'weekly' ? `${item.week_start} ~ ${item.week_end}` : `${item.month_key}`; const key = type === 'daily' ? item.trade_date : type === 'weekly' ? item.week_key : item.month_key; return `<div class="recent-item"><div class="recent-item-main"><div class="recent-item-title">${key}</div><div class="recent-item-sub">${meta || '已保存记录'}</div></div><button class="recent-link" type="button" onclick="jumpToRecord('${type}', '${key}')">查看</button></div>`; }).join(''); return `<div><div class="recent-item-title" style="margin-bottom:8px;">${title}</div>${top}</div>`; }
+        async function loadRecentRecords() { const [daily, weekly, monthly] = await Promise.all([fetch('/api/trade/daily?limit=6').then(r => r.json()), fetch('/api/trade/weekly?limit=6').then(r => r.json()), fetch('/api/trade/monthly?limit=6').then(r => r.json())]); recentRecordsEl.innerHTML = [renderRecentSection('每日计划', daily, 'daily'), renderRecentSection('周复盘', weekly, 'weekly'), renderRecentSection('月总结', monthly, 'monthly')].join(''); }
+        async function jumpToRecord(type, key) { if (type === 'daily') { document.querySelector('[data-tab="dailyPanel"]').click(); document.getElementById('dailyDate').value = key; await loadDailyRecord(); return; } if (type === 'weekly') { const [start, end] = key.split('_'); document.querySelector('[data-tab="weeklyPanel"]').click(); document.getElementById('weekStart').value = start || ''; document.getElementById('weekEnd').value = end || ''; await loadWeeklyRecord(); return; } document.querySelector('[data-tab="monthlyPanel"]').click(); document.getElementById('monthKey').value = key; await loadMonthlyRecord(); }
+    </script>
+</body>
+</html>

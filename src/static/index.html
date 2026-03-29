@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>交易信号系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('main.style_css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo" onclick="window.location.href='/index'" style="cursor: pointer; text-align: center; width: 100%; position: absolute; left: 0; font-size: 24px; color: #1e3a8a; font-weight: bold;">善鸢</div>
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar">U</div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="welcome-section">
+            <h1>交易信号系统</h1>
+            <p>围绕信号、市场和复盘建立一套适合短线的观察与执行框架。</p>
+        </div>
+    </main>
+
+    <div class="bottom-nav">
+        <div class="nav-item" onclick="window.location.href='/choice'">
+            <div class="nav-icon"><i class="fas fa-bolt"></i></div>
+            <div class="nav-label">自选</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/market'">
+            <div class="nav-icon"><i class="fas fa-chart-area"></i></div>
+            <div class="nav-label">市场</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/review'">
+            <div class="nav-icon"><i class="fas fa-book-open"></i></div>
+            <div class="nav-label">复盘</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/setting'">
+            <div class="nav-icon"><i class="fas fa-cog"></i></div>
+            <div class="nav-label">设置</div>
+        </div>
+    </div>
+</body>
+</html>

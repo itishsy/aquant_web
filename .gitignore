@@ -1,0 +1,79 @@
+# 虚拟环境
+venv/
+env/
+ENV/
+.venv/
+logs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.coverage
+.pytest_cache/
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# Windows系统
+*.exe
+*.dll
+*.obj
+*.o
+*.a
+*.lib
+*.so
+*.dylib
+*.ncb
+*.sdf
+*.suo
+*.pdb
+*.idb
+.DS_Store
+*.class
+*.exe
+*.dll
+*.manifest
+*.map
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.userprefs
+*.ide
+
+# 其他
+*.log
+
+# 批处理文件
+*.bat
+
+# 测试批处理脚本
+test.bat
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local

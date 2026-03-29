@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>市场</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('main.style_css') }}">
+    <style>
+        .market-shell { display: flex; flex-direction: column; gap: 14px; }
+        .hero-card { padding: 18px 16px; border-radius: 24px; color: #fff; background: radial-gradient(circle at top right, rgba(255,255,255,.18), transparent 28%), linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%); box-shadow: 0 16px 36px rgba(15,23,42,.2); }
+        .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+        .hero-title { font-size: 22px; font-weight: 800; }
+        .hero-subtitle { font-size: 13px; line-height: 1.7; color: rgba(255,255,255,.88); }
+        .hero-badge { padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,.14); font-size: 12px; font-weight: 700; }
+        .date-bar { display: grid; grid-template-columns: 44px 1fr 44px; gap: 10px; align-items: center; }
+        .date-btn { width: 44px; height: 44px; border: none; border-radius: 14px; background: #ffffff; color: #1d4ed8; font-size: 15px; font-weight: 700; }
+        .date-btn:disabled { opacity: .45; }
+        .date-display { min-height: 44px; border-radius: 16px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.18); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; cursor: pointer; }
+        .date-picker { position: absolute; z-index: 1000; display: none; background: #fff; border-radius: 16px; padding: 12px; box-shadow: 0 16px 34px rgba(17, 24, 39, 0.16); border: 1px solid rgba(15, 23, 42, 0.06); }
+        .date-picker input { width: 100%; margin-bottom: 10px; padding: 10px 12px; border: 1px solid #d8dfeb; border-radius: 10px; font-size: 14px; }
+        .date-picker-actions { display: flex; gap: 8px; }
+        .date-picker-actions button { flex: 1; border: none; border-radius: 10px; padding: 10px 0; font-size: 13px; font-weight: 700; }
+        .date-picker-actions button:first-child { background: #0f62fe; color: #fff; }
+        .date-picker-actions button:last-child { background: #eef2f7; color: #43516c; }
+        .tab-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .tab-btn { border: none; border-radius: 16px; padding: 12px 8px; background: #eef3f9; color: #4b5b72; font-size: 13px; font-weight: 700; }
+        .tab-btn.active { background: linear-gradient(135deg, #0f62fe 0%, #1d4ed8 100%); color: #fff; box-shadow: 0 10px 24px rgba(15,98,254,.2); }
+        .panel-card { background: #fff; border-radius: 22px; padding: 16px; box-shadow: 0 12px 30px rgba(15,23,42,.08); }
+        .panel-card.hidden { display: none; }
+        .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+        .panel-title { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 800; color: #162033; }
+        .panel-title i { width: 32px; height: 32px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: #edf4ff; color: #0f62fe; font-size: 14px; }
+        .panel-badge { padding: 6px 10px; border-radius: 999px; background: #f3f6fb; color: #5b6b82; font-size: 12px; font-weight: 700; }
+        .snapshot-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .snapshot-item { background: #f4f7fb; border-radius: 16px; padding: 12px; }
+        .snapshot-label { font-size: 12px; color: #6c7a92; margin-bottom: 6px; }
+        .snapshot-value { font-size: 18px; font-weight: 800; color: #182437; line-height: 1.3; word-break: break-word; }
+        .bullet-list, .stock-list, .zt-list { display: flex; flex-direction: column; gap: 10px; }
+        .bullet-card, .stock-card, .zt-card { background: #fbfcfe; border: 1px solid #edf1f6; border-radius: 18px; padding: 14px; }
+        .bullet-title { font-size: 13px; font-weight: 800; color: #21314b; margin-bottom: 8px; }
+        .bullet-content { font-size: 14px; line-height: 1.7; color: #3a475d; white-space: pre-wrap; word-break: break-word; }
+        .stock-card, .zt-card { display: grid; grid-template-columns: 36px 1fr; gap: 12px; }
+        .rank-badge { width: 36px; height: 36px; border-radius: 12px; background: linear-gradient(135deg, #ffb347 0%, #ff7a18 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
+        .item-main { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+        .item-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .item-title a { color: #14233a; text-decoration: none; font-weight: 800; font-size: 15px; }
+        .item-meta, .item-comment { color: #55627a; font-size: 13px; line-height: 1.6; word-break: break-word; }
+        .chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; background: #eef5ff; color: #154ea8; font-size: 12px; font-weight: 700; }
+        .strength-badge { color: #b45309; background: #fff5e8; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+        .loading-indicator, .empty-state { min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #64748b; font-size: 14px; }
+        .spinner { width: 36px; height: 36px; margin-bottom: 12px; border-radius: 50%; border: 4px solid rgba(15,98,254,.12); border-left-color: #0f62fe; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 480px) { .snapshot-value { font-size: 16px; } .stock-card, .zt-card { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo" onclick="window.location.href='/index'" style="cursor: pointer; text-align: center; width: 100%; position: absolute; left: 0; font-size: 24px; color: #1e3a8a; font-weight: bold;">市场</div>
+        <div class="user-info"><div class="user-avatar" id="userAvatar">U</div></div>
+    </nav>
+
+    <main class="main-content">
+        <div class="market-shell">
+            <section class="hero-card">
+                <!-- <div class="hero-top">
+                    <div>
+                        <div class="hero-title">市场总览</div>
+                        <div class="hero-subtitle">按日期切换查看大盘、热榜、涨停榜，快速抓住当天最重要的市场线索。</div>
+                    </div>
+                    <div class="hero-badge">每日观察</div>
+                </div> -->
+                <div class="date-bar">
+                    <button id="prevBtn" class="date-btn" aria-label="上一日"><i class="fas fa-chevron-left"></i></button>
+                    <div id="currentDateDisplay" class="date-display"></div>
+                    <button id="nextBtn" class="date-btn" aria-label="下一日"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </section>
+
+            <div id="datePicker" class="date-picker">
+                <input type="date" id="dateInput">
+                <div class="date-picker-actions">
+                    <button onclick="selectDate()">确定</button>
+                    <button onclick="hideDatePicker()">取消</button>
+                </div>
+            </div>
+
+            <section class="tab-bar">
+                <button class="tab-btn active" data-tab="overviewPanel">大盘</button>
+                <button class="tab-btn" data-tab="hotPanel">热榜</button>
+                <button class="tab-btn" data-tab="ztPanel">涨停榜</button>
+            </section>
+
+            <section class="panel-card" id="overviewPanel">
+                <div class="panel-head">
+                    <div class="panel-title"><i class="fas fa-chart-area"></i><span>大盘</span></div>
+                    <div class="panel-badge">rev_pan</div>
+                </div>
+                <div id="overviewContent" class="loading-indicator"><div class="spinner"></div><p>正在加载大盘数据...</p></div>
+            </section>
+
+            <section class="panel-card hidden" id="hotPanel">
+                <div class="panel-head">
+                    <div class="panel-title"><i class="fas fa-fire"></i><span>热榜</span></div>
+                    <div class="panel-badge">Top 10</div>
+                </div>
+                <div id="hotContent" class="loading-indicator"><div class="spinner"></div><p>正在加载热榜...</p></div>
+            </section>
+
+            <section class="panel-card hidden" id="ztPanel">
+                <div class="panel-head">
+                    <div class="panel-title"><i class="fas fa-trophy"></i><span>涨停榜</span></div>
+                    <div class="panel-badge">rev_ztb</div>
+                </div>
+                <div id="ztContent" class="loading-indicator"><div class="spinner"></div><p>正在加载涨停榜...</p></div>
+            </section>
+        </div>
+    </main>
+
+    <div class="bottom-nav">
+        <div class="nav-item" onclick="window.location.href='/choice'">
+            <div class="nav-icon"><i class="fas fa-bolt"></i></div>
+            <div class="nav-label">自选</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/market'">
+            <div class="nav-icon"><i class="fas fa-chart-area"></i></div>
+            <div class="nav-label">市场</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/review'">
+            <div class="nav-icon"><i class="fas fa-book-open"></i></div>
+            <div class="nav-label">复盘</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/setting'">
+            <div class="nav-icon"><i class="fas fa-cog"></i></div>
+            <div class="nav-label">设置</div>
+        </div>
+    </div>
+
+    <script>
+        let currentDate = new Date().toISOString().split('T')[0];
+        let hasPrevious = false;
+        let hasNext = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('prevBtn').addEventListener('click', loadPreviousDate);
+            document.getElementById('nextBtn').addEventListener('click', loadNextDate);
+            document.getElementById('currentDateDisplay').addEventListener('click', showDatePicker);
+            bindTabs();
+            loadInitialMarket();
+        });
+
+        function bindTabs() {
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-btn').forEach(item => item.classList.remove('active'));
+                    document.querySelectorAll('.panel-card').forEach(panel => panel.classList.add('hidden'));
+                    button.classList.add('active');
+                    document.getElementById(button.dataset.tab).classList.remove('hidden');
+                });
+            });
+        }
+
+        function escapeHtml(text) {
+            return String(text ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function normalizeText(text) {
+            return (text || '').toString().trim();
+        }
+
+        function getExchangePrefix(code) {
+            if (!code) return 'SZ';
+            if (code.startsWith('60') || code.startsWith('68')) return 'SH';
+            return 'SZ';
+        }
+
+        function openXueqiuStock(code) {
+            if (!code) return;
+            const prefix = getExchangePrefix(code);
+            const symbol = `${prefix}${code}`;
+            const appUrl = `xueqiu://S/${symbol}`;
+            const webUrl = `https://xueqiu.com/S/${symbol}`;
+            const started = Date.now();
+            window.location.href = appUrl;
+            setTimeout(() => {
+                if (Date.now() - started < 1800) window.open(webUrl, '_blank');
+            }, 900);
+        }
+
+        function renderEmpty(text) {
+            return `<div class="empty-state">${text}</div>`;
+        }
+
+        function renderOverview(data) {
+            if (!data || !Object.keys(data).length) {
+                document.getElementById('overviewContent').innerHTML = renderEmpty('当前日期暂无大盘数据');
+                return;
+            }
+
+            const blocks = [
+                ['盘面总评', data.review],
+                ['指数与情绪', data.zs],
+                ['核心概念', data.concept],
+                ['资金动向', data.fund],
+                ['今日机会', data.subject],
+                ['中线机会', data.chance],
+                ['风口方向', data.tuyere],
+                ['潜伏观察', data.latent],
+            ].filter(item => normalizeText(item[1]));
+
+            document.getElementById('overviewContent').innerHTML = `
+                <div class="snapshot-grid" style="margin-bottom:12px;">
+                    <div class="snapshot-item"><div class="snapshot-label">成交量</div><div class="snapshot-value">${escapeHtml(data.cjl || '-')}</div></div>
+                    <div class="snapshot-item"><div class="snapshot-label">上涨率</div><div class="snapshot-value">${escapeHtml(data.szl || '-')}</div></div>
+                    <div class="snapshot-item"><div class="snapshot-label">涨停数</div><div class="snapshot-value">${escapeHtml(data.zts || '-')}</div></div>
+                    <div class="snapshot-item"><div class="snapshot-label">最高板</div><div class="snapshot-value">${escapeHtml(data.zgb || '-')}</div></div>
+                </div>
+                <div class="bullet-list">
+                    ${blocks.map(([title, content]) => `<div class="bullet-card"><div class="bullet-title">${title}</div><div class="bullet-content">${escapeHtml(content)}</div></div>`).join('')}
+                </div>
+            `;
+        }
+
+        function renderHot(items) {
+            if (!Array.isArray(items) || !items.length) {
+                document.getElementById('hotContent').innerHTML = renderEmpty('当前日期暂无热榜数据');
+                return;
+            }
+            document.getElementById('hotContent').innerHTML = `
+                <div class="stock-list">
+                    ${items.slice(0, 10).map(item => {
+                        const meta = [normalizeText(item.change), normalizeText(item.price), normalizeText(item.reason)].filter(Boolean).join(' | ');
+                        return `<article class="stock-card"><div class="rank-badge">${escapeHtml(item.id || '-')}</div><div class="item-main"><div class="item-title"><a href="javascript:void(0)" onclick="openXueqiuStock('${escapeHtml(item.code || '')}')">${escapeHtml(item.name || '-')}</a></div>${meta ? `<div class="item-meta">${escapeHtml(meta)}</div>` : ''}<div class="item-comment">${escapeHtml(item.comment || item.reason || '暂无点评')}</div></div></article>`;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function renderZt(items) {
+            if (!Array.isArray(items) || !items.length) {
+                document.getElementById('ztContent').innerHTML = renderEmpty('当前日期暂无涨停榜数据');
+                return;
+            }
+            document.getElementById('ztContent').innerHTML = `
+                <div class="zt-list">
+                    ${items.map((item, index) => {
+                        const meta = [normalizeText(item.time), normalizeText(item.change), normalizeText(item.price)].filter(Boolean).join(' | ');
+                        const comments = [item.reason, item.comment1, item.comment2].map(normalizeText).filter(Boolean);
+                        const chips = [item.bk1, item.bk2].map(normalizeText).filter(Boolean);
+                        return `<article class="zt-card"><div class="rank-badge">${index + 1}</div><div class="item-main"><div class="item-title"><a href="javascript:void(0)" onclick="openXueqiuStock('${escapeHtml(item.code || '')}')">${escapeHtml(item.name || '-')}</a><span class="strength-badge">${escapeHtml(item.strong || '涨停')}</span></div>${meta ? `<div class="item-meta">${escapeHtml(meta)}</div>` : ''}${chips.length ? `<div class="chip-list">${chips.map(chip => `<span class="chip">${escapeHtml(chip)}</span>`).join('')}</div>` : ''}${comments.map(text => `<div class="item-comment">${escapeHtml(text)}</div>`).join('')}</div></article>`;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function updateNavButtons() {
+            document.getElementById('prevBtn').disabled = !hasPrevious;
+            document.getElementById('nextBtn').disabled = !hasNext;
+        }
+
+        function checkNavigationStatus() {
+            const previousDate = new Date(currentDate);
+            previousDate.setDate(previousDate.getDate() - 1);
+            const prevDateStr = previousDate.toISOString().split('T')[0];
+            const nextDate = new Date(currentDate);
+            nextDate.setDate(nextDate.getDate() + 1);
+            const nextDateStr = nextDate.toISOString().split('T')[0];
+            Promise.all([
+                fetch(`/api/reviews/check/${encodeURIComponent(prevDateStr)}`).then(r => r.json()).catch(() => ({ result: 0 })),
+                fetch(`/api/reviews/check/${encodeURIComponent(nextDateStr)}`).then(r => r.json()).catch(() => ({ result: 0 }))
+            ]).then(([prevData, nextData]) => {
+                hasPrevious = prevData.result > 0;
+                hasNext = nextData.result > 0;
+                updateNavButtons();
+            });
+        }
+
+        async function findLatestAvailableDate(startDate, lookbackDays = 20) {
+            for (let offset = 0; offset <= lookbackDays; offset += 1) {
+                const target = new Date(startDate);
+                target.setDate(target.getDate() - offset);
+                const dateStr = target.toISOString().split('T')[0];
+                try {
+                    const response = await fetch(`/api/reviews/check/${encodeURIComponent(dateStr)}`);
+                    const data = await response.json();
+                    if (data.result > 0) return dateStr;
+                } catch (error) {
+                }
+            }
+            return startDate;
+        }
+
+        async function loadInitialMarket() {
+            const latestDate = await findLatestAvailableDate(new Date(currentDate));
+            loadMarket(latestDate);
+        }
+
+        function loadMarket(date) {
+            document.getElementById('currentDateDisplay').textContent = date;
+            Promise.all([
+                fetch(`/api/reviews/${date}`).then(r => r.json()),
+                fetch(`/api/hot_stocks/${date}`).then(r => r.json()),
+                fetch(`/api/hot_plates/${date}`).then(r => r.json())
+            ]).then(([review, hot, zt]) => {
+                currentDate = review.date || date;
+                document.getElementById('currentDateDisplay').textContent = currentDate;
+                renderOverview(review || {});
+                renderHot(Array.isArray(hot) ? hot : []);
+                renderZt(Array.isArray(zt) ? zt : []);
+                checkNavigationStatus();
+                if (review && review.id && review.notify === 0) {
+                    fetch(`/api/reviews/${review.id}/notify`, { method: 'POST' }).catch(() => {});
+                }
+            }).catch(() => {
+                document.getElementById('overviewContent').innerHTML = renderEmpty('市场数据加载失败，请稍后重试');
+                document.getElementById('hotContent').innerHTML = renderEmpty('热榜加载失败，请稍后重试');
+                document.getElementById('ztContent').innerHTML = renderEmpty('涨停榜加载失败，请稍后重试');
+            });
+        }
+
+        function loadPreviousDate() {
+            if (!hasPrevious) return;
+            const target = new Date(currentDate);
+            target.setDate(target.getDate() - 1);
+            loadMarket(target.toISOString().split('T')[0]);
+        }
+
+        function loadNextDate() {
+            if (!hasNext) return;
+            const target = new Date(currentDate);
+            target.setDate(target.getDate() + 1);
+            loadMarket(target.toISOString().split('T')[0]);
+        }
+
+        function showDatePicker() {
+            const picker = document.getElementById('datePicker');
+            const trigger = document.getElementById('currentDateDisplay');
+            const rect = trigger.getBoundingClientRect();
+            picker.style.top = `${rect.bottom + window.scrollY + 8}px`;
+            picker.style.left = `${Math.max(12, rect.left + window.scrollX)}px`;
+            document.getElementById('dateInput').value = currentDate;
+            picker.style.display = 'block';
+        }
+
+        function hideDatePicker() {
+            document.getElementById('datePicker').style.display = 'none';
+        }
+
+        function selectDate() {
+            const value = document.getElementById('dateInput').value;
+            hideDatePicker();
+            if (value) loadMarket(value);
+        }
+
+        document.addEventListener('click', function(event) {
+            const picker = document.getElementById('datePicker');
+            const trigger = document.getElementById('currentDateDisplay');
+            if (picker.style.display === 'block' && !picker.contains(event.target) && !trigger.contains(event.target)) {
+                hideDatePicker();
+            }
+        });
+    </script>
+</body>
+</html>
