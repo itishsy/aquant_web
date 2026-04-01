@@ -270,6 +270,49 @@ def get_watchlist():
         return jsonify([]), 200
 
 
+@app_bp.route("/api/watchlist/add", methods=["POST"])
+def add_watchlist():
+    """Add stock into watchlist from market boards."""
+    try:
+        data = request.get_json(silent=True) or {}
+        code = _safe_str(data.get("code")).strip()
+        name = _safe_str(data.get("name")).strip()
+        if not code:
+            return jsonify({"error": "code is required"}), 400
+
+        now = _now()
+        signal = (
+            Signal.select()
+            .where(Signal.code == code)
+            .order_by(Signal.created.desc(), Signal.id.desc())
+            .first()
+        )
+        if signal:
+            signal.status = 1
+            signal.updated = now
+            if name and not _safe_str(signal.name).strip():
+                signal.name = name
+            signal.save()
+            return jsonify({"id": signal.id, "code": signal.code, "status": signal.status}), 200
+
+        signal = Signal.create(
+            code=code,
+            name=name or code,
+            freq="manual",
+            dt=now.strftime("%Y-%m-%d %H:%M"),
+            price=0,
+            strategy="watchlist_manual",
+            stage="watchlist",
+            status=1,
+            notify=1,
+            created=now,
+            updated=now,
+        )
+        return jsonify({"id": signal.id, "code": signal.code, "status": signal.status}), 201
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
 @app_bp.route("/api/signals/<int:signal_id>/favorite", methods=["POST"])
 def toggle_favorite(signal_id: int):
     try:

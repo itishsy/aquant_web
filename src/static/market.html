@@ -9,12 +9,8 @@
     <style>
         .market-shell { display: flex; flex-direction: column; gap: 14px; }
         .hero-card { padding: 18px 16px; border-radius: 24px; color: #fff; background: radial-gradient(circle at top right, rgba(255,255,255,.18), transparent 28%), linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%); box-shadow: 0 16px 36px rgba(15,23,42,.2); }
-        .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-        .hero-title { font-size: 22px; font-weight: 800; }
-        .hero-subtitle { font-size: 13px; line-height: 1.7; color: rgba(255,255,255,.88); }
-        .hero-badge { padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,.14); font-size: 12px; font-weight: 700; }
         .date-bar { display: grid; grid-template-columns: 44px 1fr 44px; gap: 10px; align-items: center; }
-        .date-btn { width: 44px; height: 44px; border: none; border-radius: 14px; background: #ffffff; color: #1d4ed8; font-size: 15px; font-weight: 700; }
+        .date-btn { width: 44px; height: 44px; border: none; border-radius: 14px; background: #fff; color: #1d4ed8; font-size: 15px; font-weight: 700; }
         .date-btn:disabled { opacity: .45; }
         .date-display { min-height: 44px; border-radius: 16px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.18); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; cursor: pointer; }
         .date-picker { position: absolute; z-index: 1000; display: none; background: #fff; border-radius: 16px; padding: 12px; box-shadow: 0 16px 34px rgba(17, 24, 39, 0.16); border: 1px solid rgba(15, 23, 42, 0.06); }
@@ -45,12 +41,15 @@
         .item-main { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
         .item-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .item-title a { color: #14233a; text-decoration: none; font-weight: 800; font-size: 15px; }
+        .item-actions-inline { display: inline-flex; align-items: center; gap: 8px; }
+        .watch-btn { border: none; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; color: #14532d; background: #dcfce7; cursor: pointer; white-space: nowrap; }
         .item-meta, .item-comment { color: #55627a; font-size: 13px; line-height: 1.6; word-break: break-word; }
         .chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
         .chip { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; background: #eef5ff; color: #154ea8; font-size: 12px; font-weight: 700; }
         .strength-badge { color: #b45309; background: #fff5e8; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 800; white-space: nowrap; }
         .loading-indicator, .empty-state { min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #64748b; font-size: 14px; }
         .spinner { width: 36px; height: 36px; margin-bottom: 12px; border-radius: 50%; border: 4px solid rgba(15,98,254,.12); border-left-color: #0f62fe; animation: spin 1s linear infinite; }
+        .toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); z-index: 1100; background: rgba(15,23,42,.92); color: #fff; border-radius: 12px; padding: 10px 14px; font-size: 13px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         @media (max-width: 480px) { .snapshot-value { font-size: 16px; } .stock-card, .zt-card { grid-template-columns: 1fr; } }
     </style>
@@ -64,13 +63,6 @@
     <main class="main-content">
         <div class="market-shell">
             <section class="hero-card">
-                <!-- <div class="hero-top">
-                    <div>
-                        <div class="hero-title">市场总览</div>
-                        <div class="hero-subtitle">按日期切换查看大盘、热榜、涨停榜，快速抓住当天最重要的市场线索。</div>
-                    </div>
-                    <div class="hero-badge">每日观察</div>
-                </div> -->
                 <div class="date-bar">
                     <button id="prevBtn" class="date-btn" aria-label="上一日"><i class="fas fa-chevron-left"></i></button>
                     <div id="currentDateDisplay" class="date-display"></div>
@@ -119,22 +111,10 @@
     </main>
 
     <div class="bottom-nav">
-        <div class="nav-item" onclick="window.location.href='/aquant_web/choice'">
-            <div class="nav-icon"><i class="fas fa-star"></i></div>
-            <div class="nav-label">自选</div>
-        </div>
-        <div class="nav-item active" onclick="window.location.href='/aquant_web/market'">
-            <div class="nav-icon"><i class="fas fa-chart-area"></i></div>
-            <div class="nav-label">市场</div>
-        </div>
-        <div class="nav-item" onclick="window.location.href='/aquant_web/review'">
-            <div class="nav-icon"><i class="fas fa-book-open"></i></div>
-            <div class="nav-label">复盘</div>
-        </div>
-        <div class="nav-item" onclick="window.location.href='/aquant_web/setting'">
-            <div class="nav-icon"><i class="fas fa-cog"></i></div>
-            <div class="nav-label">设置</div>
-        </div>
+        <div class="nav-item" onclick="window.location.href='/aquant_web/choice'"><div class="nav-icon"><i class="fas fa-star"></i></div><div class="nav-label">自选</div></div>
+        <div class="nav-item active" onclick="window.location.href='/aquant_web/market'"><div class="nav-icon"><i class="fas fa-chart-area"></i></div><div class="nav-label">市场</div></div>
+        <div class="nav-item" onclick="window.location.href='/aquant_web/review'"><div class="nav-icon"><i class="fas fa-book-open"></i></div><div class="nav-label">复盘</div></div>
+        <div class="nav-item" onclick="window.location.href='/aquant_web/setting'"><div class="nav-icon"><i class="fas fa-cog"></i></div><div class="nav-label">设置</div></div>
     </div>
 
     <script>
@@ -188,6 +168,32 @@
             }, 900);
         }
 
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2200);
+        }
+
+        function addToWatchlist(code, name) {
+            if (!code) return;
+            fetch('/aquant_web/api/watchlist/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, name })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.error) {
+                        showToast('加入自选失败');
+                        return;
+                    }
+                    showToast(`${name || code} 已加入自选`);
+                })
+                .catch(() => showToast('加入自选失败'));
+        }
+
         function renderEmpty(text) {
             return `<div class="empty-state">${text}</div>`;
         }
@@ -197,7 +203,6 @@
                 document.getElementById('overviewContent').innerHTML = renderEmpty('当前日期暂无大盘数据');
                 return;
             }
-
             const blocks = [
                 ['盘面总评', data.review],
                 ['指数与情绪', data.zs],
@@ -208,7 +213,6 @@
                 ['风口方向', data.tuyere],
                 ['潜伏观察', data.latent],
             ].filter(item => normalizeText(item[1]));
-
             document.getElementById('overviewContent').innerHTML = `
                 <div class="snapshot-grid" style="margin-bottom:12px;">
                     <div class="snapshot-item"><div class="snapshot-label">成交量</div><div class="snapshot-value">${escapeHtml(data.cjl || '-')}</div></div>
@@ -231,7 +235,7 @@
                 <div class="stock-list">
                     ${items.slice(0, 10).map(item => {
                         const meta = [normalizeText(item.change), normalizeText(item.price), normalizeText(item.reason)].filter(Boolean).join(' | ');
-                        return `<article class="stock-card"><div class="rank-badge">${escapeHtml(item.id || '-')}</div><div class="item-main"><div class="item-title"><a href="javascript:void(0)" onclick="openXueqiuStock('${escapeHtml(item.code || '')}')">${escapeHtml(item.name || '-')}</a></div>${meta ? `<div class="item-meta">${escapeHtml(meta)}</div>` : ''}<div class="item-comment">${escapeHtml(item.comment || item.reason || '暂无点评')}</div></div></article>`;
+                        return `<article class="stock-card"><div class="rank-badge">${escapeHtml(item.id || '-')}</div><div class="item-main"><div class="item-title"><a href="javascript:void(0)" onclick="openXueqiuStock('${escapeHtml(item.code || '')}')">${escapeHtml(item.name || '-')}</a><div class="item-actions-inline"><button class="watch-btn" type="button" onclick="addToWatchlist('${escapeHtml(item.code || '')}','${escapeHtml(item.name || '')}')">加入自选</button></div></div>${meta ? `<div class="item-meta">${escapeHtml(meta)}</div>` : ''}<div class="item-comment">${escapeHtml(item.comment || item.reason || '暂无点评')}</div></div></article>`;
                     }).join('')}
                 </div>
             `;
@@ -248,7 +252,7 @@
                         const meta = [normalizeText(item.time), normalizeText(item.change), normalizeText(item.price)].filter(Boolean).join(' | ');
                         const comments = [item.reason, item.comment1, item.comment2].map(normalizeText).filter(Boolean);
                         const chips = [item.bk1, item.bk2].map(normalizeText).filter(Boolean);
-                        return `<article class="zt-card"><div class="rank-badge">${index + 1}</div><div class="item-main"><div class="item-title"><a href="javascript:void(0)" onclick="openXueqiuStock('${escapeHtml(item.code || '')}')">${escapeHtml(item.name || '-')}</a><span class="strength-badge">${escapeHtml(item.strong || '涨停')}</span></div>${meta ? `<div class="item-meta">${escapeHtml(meta)}</div>` : ''}${chips.length ? `<div class="chip-list">${chips.map(chip => `<span class="chip">${escapeHtml(chip)}</span>`).join('')}</div>` : ''}${comments.map(text => `<div class="item-comment">${escapeHtml(text)}</div>`).join('')}</div></article>`;
+                        return `<article class="zt-card"><div class="rank-badge">${index + 1}</div><div class="item-main"><div class="item-title"><a href="javascript:void(0)" onclick="openXueqiuStock('${escapeHtml(item.code || '')}')">${escapeHtml(item.name || '-')}</a><div class="item-actions-inline"><button class="watch-btn" type="button" onclick="addToWatchlist('${escapeHtml(item.code || '')}','${escapeHtml(item.name || '')}')">加入自选</button><span class="strength-badge">${escapeHtml(item.strong || '涨停')}</span></div></div>${meta ? `<div class="item-meta">${escapeHtml(meta)}</div>` : ''}${chips.length ? `<div class="chip-list">${chips.map(chip => `<span class="chip">${escapeHtml(chip)}</span>`).join('')}</div>` : ''}${comments.map(text => `<div class="item-comment">${escapeHtml(text)}</div>`).join('')}</div></article>`;
                     }).join('')}
                 </div>
             `;
@@ -285,8 +289,7 @@
                     const response = await fetch(`/aquant_web/api/reviews/check/${encodeURIComponent(dateStr)}`);
                     const data = await response.json();
                     if (data.result > 0) return dateStr;
-                } catch (error) {
-                }
+                } catch (error) {}
             }
             return startDate;
         }
