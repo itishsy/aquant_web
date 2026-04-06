@@ -378,7 +378,7 @@ def get_hot_stocks(date: str):
         rows = (
             RevHot.select()
             .where(RevHot.date == date)
-            .order_by(RevHot.score.asc(), RevHot.id.asc())
+            .order_by(RevHot.score.desc(), RevHot.id.asc())
             .limit(10)
         )
         payload = []
@@ -391,7 +391,7 @@ def get_hot_stocks(date: str):
                     "price": row.price,
                     "change": row.change,
                     "reason": row.reason,
-                    "score": row.score,
+                    "score": int(row.score) if row.score is not None else 0,
                     "comment": row.comment,
                     "created": row.created.strftime("%Y-%m-%d %H:%M:%S") if row.created else "",
                 }

@@ -44,6 +44,10 @@
         .item-actions-inline { display: inline-flex; align-items: center; gap: 8px; }
         .watch-btn { border: none; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; color: #14532d; background: #dcfce7; cursor: pointer; white-space: nowrap; }
         .item-meta, .item-comment { color: #55627a; font-size: 13px; line-height: 1.6; word-break: break-word; }
+        .item-score { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; background: linear-gradient(135deg, #ffe2b0 0%, #ffb347 100%); color: #7c2d12; font-size: 12px; font-weight: 800; border: 1px solid rgba(124,45,18,.12); }
+        .detail-toggle-btn { border: none; border-radius: 10px; padding: 6px 10px; font-size: 12px; font-weight: 700; color: #1d4ed8; background: #eff6ff; cursor: pointer; }
+        .detail-box { display: none; }
+        .detail-box.show { display: block; }
         .chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
         .chip { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; background: #eef5ff; color: #154ea8; font-size: 12px; font-weight: 700; }
         .strength-badge { color: #b45309; background: #fff5e8; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 800; white-space: nowrap; }
@@ -145,6 +149,15 @@
             return String(text ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
+        function renderRichText(content) {
+            const text = String(content ?? '');
+            if (!text.trim()) return '';
+            if (/[<][a-zA-Z!/][\s\S]*[>]/.test(text)) {
+                return text;
+            }
+            return escapeHtml(text).replace(/\n/g, '<br>');
+        }
+
         function normalizeText(text) {
             return (text || '').toString().trim();
         }
@@ -194,6 +207,14 @@
                 .catch(() => showToast('加入自选失败'));
         }
 
+        function toggleDetail(button) {
+            const card = button.closest('.item-main');
+            const detail = card ? card.querySelector('.detail-box') : null;
+            if (!detail) return;
+            detail.classList.toggle('show');
+            button.textContent = detail.classList.contains('show') ? '收起' : '展开';
+        }
+
         function renderEmpty(text) {
             return `<div class="empty-state">${text}</div>`;
         }
@@ -217,11 +238,11 @@
                 <div class="snapshot-grid" style="margin-bottom:12px;">
                     <div class="snapshot-item"><div class="snapshot-label">成交量</div><div class="snapshot-value">${escapeHtml(data.cjl || '-')}</div></div>
                     <div class="snapshot-item"><div class="snapshot-label">上涨率</div><div class="snapshot-value">${escapeHtml(data.szl || '-')}</div></div>
-                    <div class="snapshot-item"><div class="snapshot-label">涨停数</div><div class="snapshot-value">${escapeHtml(data.zts || '-')}</div></div>
+                    <div class="snapshot-item"><div class="snapshot-label">涨跌停数</div><div class="snapshot-value">${escapeHtml(data.zts || '-')}/${escapeHtml(data.dts || '-')}</div></div>
                     <div class="snapshot-item"><div class="snapshot-label">最高板</div><div class="snapshot-value">${escapeHtml(data.zgb || '-')}</div></div>
                 </div>
                 <div class="bullet-list">
-                    ${blocks.map(([title, content]) => `<div class="bullet-card"><div class="bullet-title">${title}</div><div class="bullet-content">${escapeHtml(content)}</div></div>`).join('')}
+                    ${blocks.map(([title, content]) => `<div class="bullet-card"><div class="bullet-title">${title}</div><div class="bullet-content">${renderRichText(content)}</div></div>`).join('')}
                 </div>
             `;
         }
@@ -235,7 +256,8 @@
                 <div class="stock-list">
                     ${items.slice(0, 10).map(item => {
                         const meta = [normalizeText(item.change), normalizeText(item.price), normalizeText(item.reason)].filter(Boolean).join(' | ');
-                        return `<article class="stock-card"><div class="rank-badge">${escapeHtml(item.id || '-')}</div><div class="item-main"><div class="item-title"><a href="javascript:void(0)" onclick="openXueqiuStock('${escapeHtml(item.code || '')}')">${escapeHtml(item.name || '-')}</a><div class="item-actions-inline"><button class="watch-btn" type="button" onclick="addToWatchlist('${escapeHtml(item.code || '')}','${escapeHtml(item.name || '')}')">加入自选</button></div></div>${meta ? `<div class="item-meta">${escapeHtml(meta)}</div>` : ''}<div class="item-comment">${escapeHtml(item.comment || item.reason || '暂无点评')}</div></div></article>`;
+                        const scoreText = `${escapeHtml(item.score ?? 0)}`;
+                        return `<article class="stock-card"><div class="rank-badge">${escapeHtml(item.id || '-')}</div><div class="item-main"><div class="item-title"><a href="javascript:void(0)" onclick="openXueqiuStock('${escapeHtml(item.code || '')}')">${escapeHtml(item.name || '-')}</a><div class="item-actions-inline"><span class="item-score">${scoreText}</span><button class="watch-btn" type="button" onclick="addToWatchlist('${escapeHtml(item.code || '')}','${escapeHtml(item.name || '')}')">加入自选</button></div></div>${meta ? `<div class="item-meta">${escapeHtml(meta)}</div>` : ''}<div class="item-actions-inline"><button class="detail-toggle-btn" type="button" onclick="toggleDetail(this)">展开</button></div><div class="detail-box"><div class="item-comment">${escapeHtml(item.comment || item.reason || '暂无点评')}</div></div></div></article>`;
                     }).join('')}
                 </div>
             `;
