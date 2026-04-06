@@ -55,10 +55,10 @@
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="logo" onclick="window.location.href='/aquant_web/index'" style="cursor: pointer; text-align: center; width: 100%; position: absolute; left: 0; font-size: 24px; color: #1e3a8a; font-weight: bold;">市场</div>
+    <!-- <nav class="navbar">
+        <div class="logo" onclick="window.location.href='/index'" style="cursor: pointer; text-align: center; width: 100%; position: absolute; left: 0; font-size: 24px; color: #1e3a8a; font-weight: bold;">市场</div>
         <div class="user-info"><div class="user-avatar" id="userAvatar">U</div></div>
-    </nav>
+    </nav> -->
 
     <main class="main-content">
         <div class="market-shell">
@@ -111,10 +111,10 @@
     </main>
 
     <div class="bottom-nav">
-        <div class="nav-item active" onclick="window.location.href='/aquant_web/market'"><div class="nav-icon"><i class="fas fa-chart-area"></i></div><div class="nav-label">市场</div></div>
-        <div class="nav-item" onclick="window.location.href='/aquant_web/review'"><div class="nav-icon"><i class="fas fa-book-open"></i></div><div class="nav-label">复盘</div></div>
-        <div class="nav-item" onclick="window.location.href='/aquant_web/choice'"><div class="nav-icon"><i class="fas fa-star"></i></div><div class="nav-label">自选</div></div>
-        <div class="nav-item" onclick="window.location.href='/aquant_web/setting'"><div class="nav-icon"><i class="fas fa-cog"></i></div><div class="nav-label">设置</div></div>
+        <div class="nav-item active" onclick="window.location.href='/market'"><div class="nav-icon"><i class="fas fa-chart-area"></i></div><div class="nav-label">市场</div></div>
+        <div class="nav-item" onclick="window.location.href='/review'"><div class="nav-icon"><i class="fas fa-book-open"></i></div><div class="nav-label">复盘</div></div>
+        <div class="nav-item" onclick="window.location.href='/choice'"><div class="nav-icon"><i class="fas fa-star"></i></div><div class="nav-label">自选</div></div>
+        <div class="nav-item" onclick="window.location.href='/setting'"><div class="nav-icon"><i class="fas fa-cog"></i></div><div class="nav-label">设置</div></div>
     </div>
 
     <script>
@@ -178,7 +178,7 @@
 
         function addToWatchlist(code, name) {
             if (!code) return;
-            fetch('/aquant_web/api/watchlist/add', {
+            fetch('/api/watchlist/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code, name })
@@ -271,8 +271,8 @@
             nextDate.setDate(nextDate.getDate() + 1);
             const nextDateStr = nextDate.toISOString().split('T')[0];
             Promise.all([
-                fetch(`/aquant_web/api/reviews/check/${encodeURIComponent(prevDateStr)}`).then(r => r.json()).catch(() => ({ result: 0 })),
-                fetch(`/aquant_web/api/reviews/check/${encodeURIComponent(nextDateStr)}`).then(r => r.json()).catch(() => ({ result: 0 }))
+                fetch(`/api/reviews/check/${encodeURIComponent(prevDateStr)}`).then(r => r.json()).catch(() => ({ result: 0 })),
+                fetch(`/api/reviews/check/${encodeURIComponent(nextDateStr)}`).then(r => r.json()).catch(() => ({ result: 0 }))
             ]).then(([prevData, nextData]) => {
                 hasPrevious = prevData.result > 0;
                 hasNext = nextData.result > 0;
@@ -286,7 +286,7 @@
                 target.setDate(target.getDate() - offset);
                 const dateStr = target.toISOString().split('T')[0];
                 try {
-                    const response = await fetch(`/aquant_web/api/reviews/check/${encodeURIComponent(dateStr)}`);
+                    const response = await fetch(`/api/reviews/check/${encodeURIComponent(dateStr)}`);
                     const data = await response.json();
                     if (data.result > 0) return dateStr;
                 } catch (error) {}
@@ -302,9 +302,9 @@
         function loadMarket(date) {
             document.getElementById('currentDateDisplay').textContent = date;
             Promise.all([
-                fetch(`/aquant_web/api/reviews/${date}`).then(r => r.json()),
-                fetch(`/aquant_web/api/hot_stocks/${date}`).then(r => r.json()),
-                fetch(`/aquant_web/api/hot_plates/${date}`).then(r => r.json())
+                fetch(`/api/reviews/${date}`).then(r => r.json()),
+                fetch(`/api/hot_stocks/${date}`).then(r => r.json()),
+                fetch(`/api/hot_plates/${date}`).then(r => r.json())
             ]).then(([review, hot, zt]) => {
                 currentDate = review.date || date;
                 document.getElementById('currentDateDisplay').textContent = currentDate;
@@ -313,7 +313,7 @@
                 renderZt(Array.isArray(zt) ? zt : []);
                 checkNavigationStatus();
                 if (review && review.id && review.notify === 0) {
-                    fetch(`/aquant_web/api/reviews/${review.id}/notify`, { method: 'POST' }).catch(() => {});
+                    fetch(`/api/reviews/${review.id}/notify`, { method: 'POST' }).catch(() => {});
                 }
             }).catch(() => {
                 document.getElementById('overviewContent').innerHTML = renderEmpty('市场数据加载失败，请稍后重试');

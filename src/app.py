@@ -24,8 +24,8 @@ from src.db.models import (
 )
 
 DEFAULT_HOST = "0.0.0.0"
-DEFAULT_PORT = 8080
-APP_PREFIX = "/aquant_web"
+DEFAULT_PORT = 8081
+APP_PREFIX = "/"
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TEMPLATE_DIR = os.path.join(BASE_DIR, "static")
@@ -673,7 +673,7 @@ def create_app() -> Flask:
 
     @app.route("/", methods=["GET"])
     def root_redirect():
-        return redirect(APP_PREFIX + "/")
+        return redirect(f"{APP_PREFIX}/index" if APP_PREFIX else "/index")
 
     @app.route("/shutdown", methods=["GET"])
     def shutdown():
@@ -681,7 +681,7 @@ def create_app() -> Flask:
         server_shutdown_flag = True
         return "Server shutting down..."
 
-    app.register_blueprint(app_bp, url_prefix=APP_PREFIX)
+    app.register_blueprint(app_bp, url_prefix=APP_PREFIX or None)
     return app
 
 

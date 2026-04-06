@@ -289,7 +289,7 @@
             loginButton.textContent = '登录中...';
             
             // 发送登录请求
-            fetch('/aquant_web/login', {
+            fetch('/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -309,7 +309,7 @@
                     // 登录成功，存储用户名到localStorage
                     localStorage.setItem('username', data.user.username);
                     // 跳转到主页面
-                    window.location.href = '/aquant_web/index';
+                    window.location.href = '/index';
                 } else {
                     // 登录失败，显示错误消息
                     alert('登录失败: ' + data.message);
