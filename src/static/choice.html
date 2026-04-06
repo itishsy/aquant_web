@@ -52,10 +52,9 @@
 
     <main class="main-content">
         <div class="watch-shell">
-            <section class="hero-card">
+            <!-- <section class="hero-card">
                 <h1>自选与信号</h1>
-                <p>切换 Tab 查看“自选”和“信号”。加入自选后会出现在独立列表里，方便你集中跟踪。</p>
-            </section>
+            </section> -->
 
             <section class="tab-bar">
                 <button class="tab-btn active" data-tab="watchlistPanelCard">自选</button>
@@ -85,10 +84,6 @@
     </main>
 
     <div class="bottom-nav">
-        <div class="nav-item active" onclick="window.location.href='/aquant_web/choice'">
-            <div class="nav-icon"><i class="fas fa-star"></i></div>
-            <div class="nav-label">自选</div>
-        </div>
         <div class="nav-item" onclick="window.location.href='/aquant_web/market'">
             <div class="nav-icon"><i class="fas fa-chart-area"></i></div>
             <div class="nav-label">市场</div>
@@ -96,6 +91,10 @@
         <div class="nav-item" onclick="window.location.href='/aquant_web/review'">
             <div class="nav-icon"><i class="fas fa-book-open"></i></div>
             <div class="nav-label">复盘</div>
+        </div>
+        <div class="nav-item active" onclick="window.location.href='/aquant_web/choice'">
+            <div class="nav-icon"><i class="fas fa-star"></i></div>
+            <div class="nav-label">自选</div>
         </div>
         <div class="nav-item" onclick="window.location.href='/aquant_web/setting'">
             <div class="nav-icon"><i class="fas fa-cog"></i></div>
