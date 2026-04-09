@@ -36,7 +36,7 @@
         .bullet-card, .stock-card, .zt-card { background: #fbfcfe; border: 1px solid #edf1f6; border-radius: 18px; padding: 14px; }
         .bullet-title { font-size: 13px; font-weight: 800; color: #21314b; margin-bottom: 8px; }
         .bullet-content { font-size: 14px; line-height: 1.7; color: #3a475d; white-space: pre-wrap; word-break: break-word; }
-        .stock-card, .zt-card { display: grid; grid-template-columns: 36px 1fr; gap: 12px; }
+        .stock-card, .zt-card { display: grid; grid-template-columns: 1fr; gap: 12px; }
         .rank-badge { width: 36px; height: 36px; border-radius: 12px; background: linear-gradient(135deg, #ffb347 0%, #ff7a18 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
         .item-main { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
         .item-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -99,7 +99,7 @@
             <section class="panel-card hidden" id="hotPanel">
                 <div class="panel-head">
                     <div class="panel-title"><i class="fas fa-fire"></i><span>热榜</span></div>
-                    <div class="panel-badge">Top 10</div>
+                    <div class="panel-badge">热榜</div>
                 </div>
                 <div id="hotContent" class="loading-indicator"><div class="spinner"></div><p>正在加载热榜...</p></div>
             </section>
@@ -257,7 +257,7 @@
                     ${items.slice(0, 10).map(item => {
                         const meta = [normalizeText(item.change), normalizeText(item.price), normalizeText(item.reason)].filter(Boolean).join(' | ');
                         const scoreText = `${escapeHtml(item.score ?? 0)}`;
-                        return `<article class="stock-card"><div class="rank-badge">${escapeHtml(item.id || '-')}</div><div class="item-main"><div class="item-title"><a href="javascript:void(0)" onclick="openXueqiuStock('${escapeHtml(item.code || '')}')">${escapeHtml(item.name || '-')}</a><div class="item-actions-inline"><span class="item-score">${scoreText}</span><button class="watch-btn" type="button" onclick="addToWatchlist('${escapeHtml(item.code || '')}','${escapeHtml(item.name || '')}')">加入自选</button></div></div>${meta ? `<div class="item-meta">${escapeHtml(meta)}</div>` : ''}<div class="item-actions-inline"><button class="detail-toggle-btn" type="button" onclick="toggleDetail(this)">展开</button></div><div class="detail-box"><div class="item-comment">${escapeHtml(item.comment || item.reason || '暂无点评')}</div></div></div></article>`;
+                        return `<article class="stock-card"><div class="item-main"><div class="item-title"><a href="javascript:void(0)" onclick="openXueqiuStock('${escapeHtml(item.code || '')}')">${escapeHtml(item.name || '-')}</a><div class="item-actions-inline"><span class="item-score">${scoreText}</span><button class="watch-btn" type="button" onclick="addToWatchlist('${escapeHtml(item.code || '')}','${escapeHtml(item.name || '')}')">加入自选</button><button class="detail-toggle-btn" type="button" onclick="toggleDetail(this)">展开</button></div></div>${meta ? `<div class="item-meta">${escapeHtml(meta)}</div>` : ''}<div class="detail-box"><div class="item-comment">${escapeHtml(item.comment || item.reason || '暂无点评')}</div></div></div></article>`;
                     }).join('')}
                 </div>
             `;
@@ -270,11 +270,11 @@
             }
             document.getElementById('ztContent').innerHTML = `
                 <div class="zt-list">
-                    ${items.map((item, index) => {
+                    ${items.map((item) => {
                         const meta = [normalizeText(item.time), normalizeText(item.change), normalizeText(item.price)].filter(Boolean).join(' | ');
                         const comments = [item.reason, item.comment1, item.comment2].map(normalizeText).filter(Boolean);
                         const chips = [item.bk1, item.bk2].map(normalizeText).filter(Boolean);
-                        return `<article class="zt-card"><div class="rank-badge">${index + 1}</div><div class="item-main"><div class="item-title"><a href="javascript:void(0)" onclick="openXueqiuStock('${escapeHtml(item.code || '')}')">${escapeHtml(item.name || '-')}</a><div class="item-actions-inline"><button class="watch-btn" type="button" onclick="addToWatchlist('${escapeHtml(item.code || '')}','${escapeHtml(item.name || '')}')">加入自选</button><span class="strength-badge">${escapeHtml(item.strong || '涨停')}</span></div></div>${meta ? `<div class="item-meta">${escapeHtml(meta)}</div>` : ''}${chips.length ? `<div class="chip-list">${chips.map(chip => `<span class="chip">${escapeHtml(chip)}</span>`).join('')}</div>` : ''}${comments.map(text => `<div class="item-comment">${escapeHtml(text)}</div>`).join('')}</div></article>`;
+                        return `<article class="zt-card"><div class="item-main"><div class="item-title"><a href="javascript:void(0)" onclick="openXueqiuStock('${escapeHtml(item.code || '')}')">${escapeHtml(item.name || '-')}</a><div class="item-actions-inline"><button class="watch-btn" type="button" onclick="addToWatchlist('${escapeHtml(item.code || '')}','${escapeHtml(item.name || '')}')">加入自选</button><span class="strength-badge">${escapeHtml(item.strong || '涨停')}</span></div></div>${meta ? `<div class="item-meta">${escapeHtml(meta)}</div>` : ''}${chips.length ? `<div class="chip-list">${chips.map(chip => `<span class="chip">${escapeHtml(chip)}</span>`).join('')}</div>` : ''}${comments.map(text => `<div class="item-comment">${escapeHtml(text)}</div>`).join('')}</div></article>`;
                     }).join('')}
                 </div>
             `;
